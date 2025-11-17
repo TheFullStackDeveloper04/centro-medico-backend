@@ -1,19 +1,44 @@
 import express from 'express';
-import { createUser } from '../controllers/user.controller.js';
+// 1. Importar las nuevas funciones
+import {
+    createUser,
+    getUsers,
+    getMedicos
+} from '../controllers/user.controller.js';
 
-// --- 1. IMPORTAR MIDDLEWARES ---
+// Importar middlewares
 import authMiddleware from '../middlewares/authMiddleware.js';
 import roleMiddleware from '../middlewares/roleMiddleware.js';
 
 const router = express.Router();
 
-// --- 2. APLICAR MIDDLEWARES ---
-// POST /api/users
+// --- Definición de Rutas ---
+
+// POST /api/users (Crear Usuario)
+// Protegido: Solo Admin
 router.post(
     '/',
-    authMiddleware,           // 1ro: Verifica que el token sea válido
-    roleMiddleware('admin'),  // 2do: Verifica que el rol sea 'admin'
-    createUser                // 3ro: Si todo está bien, ejecuta el controlador
+    authMiddleware,
+    roleMiddleware('admin'),
+    createUser
+);
+
+// GET /api/users (Listar Todos los Usuarios)
+// Protegido: Solo Admin
+router.get(
+    '/',
+    authMiddleware,
+    roleMiddleware('admin'),
+    getUsers
+);
+
+// GET /api/users/medicos (Listar Médicos)
+// Protegido: Solo Recepcionista (para crear turnos)
+router.get(
+    '/medicos',
+    authMiddleware,
+    roleMiddleware('recepcionista'),
+    getMedicos
 );
 
 export default router;

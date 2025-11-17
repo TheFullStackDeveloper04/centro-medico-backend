@@ -1,5 +1,11 @@
 import express from 'express';
-import { createPaciente, getPacientes } from '../controllers/paciente.controller.js';
+// 1. Importar las nuevas funciones
+import {
+    createPaciente,
+    getPacientes,
+    updatePaciente,
+    deletePaciente
+} from '../controllers/paciente.controller.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import roleMiddleware from '../middlewares/roleMiddleware.js';
 
@@ -7,7 +13,7 @@ const router = express.Router();
 
 // --- Definición de Rutas ---
 
-// POST /api/pacientes
+// POST /api/pacientes (Crear)
 // Protegido: Solo Recepcionista
 router.post(
     '/',
@@ -16,13 +22,31 @@ router.post(
     createPaciente
 );
 
-// GET /api/pacientes
+// GET /api/pacientes (Listar)
 // Protegido: Recepcionista y Medico
 router.get(
     '/',
     authMiddleware,
     roleMiddleware('recepcionista', 'medico'),
     getPacientes
+);
+
+// PUT /api/pacientes/:id (Actualizar)
+// Protegido: Solo Recepcionista
+router.put(
+    '/:id',
+    authMiddleware,
+    roleMiddleware('recepcionista'),
+    updatePaciente
+);
+
+// DELETE /api/pacientes/:id (Eliminar)
+// Protegido: Solo Recepcionista
+router.delete(
+    '/:id',
+    authMiddleware,
+    roleMiddleware('recepcionista'),
+    deletePaciente
 );
 
 export default router;

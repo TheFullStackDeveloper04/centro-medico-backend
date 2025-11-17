@@ -1,9 +1,12 @@
 import express from 'express';
+// 1. Importar las nuevas funciones
 import {
     createTurno,
     getAllTurnos,
     getMisTurnos,
-    updateTurnoEstado
+    updateTurnoEstado,
+    updateTurno,
+    deleteTurno
 } from '../controllers/turno.controller.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import roleMiddleware from '../middlewares/roleMiddleware.js';
@@ -11,7 +14,6 @@ import roleMiddleware from '../middlewares/roleMiddleware.js';
 const router = express.Router();
 
 // POST /api/turnos (Crear)
-// Solo Recepcionista [cite: 37]
 router.post(
     '/',
     authMiddleware,
@@ -19,17 +21,15 @@ router.post(
     createTurno
 );
 
-// GET /api/turnos (Listar todos, con filtros)
-// Solo Recepcionista (para gestionar)
+// GET /api/turnos (Listar todos)
 router.get(
     '/',
     authMiddleware,
-    roleMiddleware('recepcionista'), // Asumimos que solo recepcionista necesita ver todo
+    roleMiddleware('recepcionista'),
     getAllTurnos
 );
 
-// GET /api/turnos/mis-turnos (Listar mis turnos)
-// Solo Medico 
+// GET /api/turnos/mis-turnos (Médico)
 router.get(
     '/mis-turnos',
     authMiddleware,
@@ -37,13 +37,30 @@ router.get(
     getMisTurnos
 );
 
-// PATCH /api/turnos/:id/estado (Actualizar estado)
-// Medico (para sus turnos) y Recepcionista (para cancelar) [cite: 20, 37]
+// PATCH /api/turnos/:id/estado (Actualizar solo estado)
 router.patch(
     '/:id/estado',
     authMiddleware,
     roleMiddleware('medico', 'recepcionista'),
     updateTurnoEstado
+);
+
+// PUT /api/turnos/:id (Actualizar turno completo)
+// Protegido: Solo Recepcionista
+router.put(
+    '/:id',
+    authMiddleware,
+    roleMiddleware('recepcionista'),
+    updateTurno
+);
+
+// DELETE /api/turnos/:id (Eliminar turno)
+// Protegido: Solo Recepcionista
+router.delete(
+    '/:id',
+    authMiddleware,
+    roleMiddleware('recepcionista'),
+    deleteTurno
 );
 
 export default router;

@@ -135,3 +135,81 @@ export const updateTurnoEstado = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor' });
     }
 };
+
+/**
+ * @desc    Actualizar un turno completo (Fecha, Hora, Motivo, etc.)
+ * @route   PUT /api/turnos/:id
+ * @access  Private (Recepcionista)
+ */
+export const updateTurno = async (req, res) => {
+    const { id } = req.params;
+    const { paciente, medico, fecha, hora, motivo, estado } = req.body;
+
+    try {
+        // 1. Validar que el turno exista
+        const turno = await Turno.findById(id);
+        if (!turno) {
+            return res.status(404).json({ message: 'Turno no encontrado' });
+        }
+
+        // 2. Opcional: Validar IDs de paciente y médico si se cambian
+        if (paciente && paciente !== turno.paciente.toString()) {
+            const pacienteExiste = await Paciente.findById(paciente);
+            if (!pacienteExiste) return res.status(404).json({ message: 'Paciente no encontrado' });
+        }
+        if (medico && medico !== turno.medico.toString()) {
+            const medicoUser = await User.findById(medico);
+            if (!medicoUser || medicoUser.rol !== 'medico') {
+                return res.status(404).json({ message: 'Médico no encontrado' });
+            }
+        }
+
+        // 3. Actualizar los campos
+        turno.paciente = paciente || turno.paciente;
+        turno.medico = medico || turno.medico;
+        turno.fecha = fecha || turno.fecha;
+        turno.hora = hora || turno.hora;
+        turno.motivo = motivo || turno.motivo;
+
+        // Solo actualizamos estado si se provee uno válido
+        if (estado && ['PROGRAMADO', 'ATENDIDO', 'CANCELADO'].includes(estado)) {
+            turno.estado = estado;
+        }
+
+        // 4. Guardar
+        const turnoActualizado = await turno.save();
+        res.status(200).json({
+            message: 'Turno actualizado exitosamente',
+            turno: turnoActualizado
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+
+/**
+ * @desc    Eliminar un turno por ID
+ * @route   DELETE /api/turnos/:id
+ * @access  Private (Recepcionista)
+ */
+export const deleteTurno = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const turno = await Turno.findById(id);
+
+        if (!turno) {
+            return res.status(404).json({ message: 'Turno no encontrado' });
+        }
+
+        await Turno.findByIdAndDelete(id);
+
+        res.status(200).json({ message: 'Turno eliminado exitosamente' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};

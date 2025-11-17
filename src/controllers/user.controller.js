@@ -40,4 +40,38 @@ export const createUser = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Error del servidor' });
     }
+
+
+};
+
+/**
+ * @desc    Obtener todos los usuarios (listado)
+ * @route   GET /api/users
+ * @access  Private (Admin)
+ */
+export const getUsers = async (req, res) => {
+    try {
+        // Buscamos todos los usuarios, pero no enviamos la contraseña
+        const users = await User.find({}).select('-password');
+        res.status(200).json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+
+/**
+ * @desc    Obtener solo los usuarios con rol 'medico'
+ * @route   GET /api/users/medicos
+ * @access  Private (Recepcionista)
+ */
+export const getMedicos = async (req, res) => {
+    try {
+        // Buscamos usuarios filtrando por el rol 'medico'
+        const medicos = await User.find({ rol: 'medico' }).select('-password -rol'); // No es necesario enviar el rol o pass
+        res.status(200).json(medicos);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
 };
