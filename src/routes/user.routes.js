@@ -1,44 +1,26 @@
+// src/routes/user.routes.js
 import express from 'express';
-// 1. Importar las nuevas funciones
 import {
     createUser,
     getUsers,
-    getMedicos
+    getMedicos,
+    deleteUser
 } from '../controllers/user.controller.js';
-
-// Importar middlewares
 import authMiddleware from '../middlewares/authMiddleware.js';
 import roleMiddleware from '../middlewares/roleMiddleware.js';
 
 const router = express.Router();
 
-// --- Definición de Rutas ---
+// POST /api/users (Crear)
+router.post('/', authMiddleware, roleMiddleware('admin'), createUser);
 
-// POST /api/users (Crear Usuario)
-// Protegido: Solo Admin
-router.post(
-    '/',
-    authMiddleware,
-    roleMiddleware('admin'),
-    createUser
-);
-
-// GET /api/users (Listar Todos los Usuarios)
-// Protegido: Solo Admin
-router.get(
-    '/',
-    authMiddleware,
-    roleMiddleware('admin'),
-    getUsers
-);
+// GET /api/users (Listar Todos)
+router.get('/', authMiddleware, roleMiddleware('admin'), getUsers);
 
 // GET /api/users/medicos (Listar Médicos)
-// Protegido: Solo Recepcionista (para crear turnos)
-router.get(
-    '/medicos',
-    authMiddleware,
-    roleMiddleware('recepcionista'),
-    getMedicos
-);
+router.get('/medicos', authMiddleware, roleMiddleware('recepcionista'), getMedicos);
+
+// DELETE /api/users/:id (Eliminar Usuario)
+router.delete('/:id', authMiddleware, roleMiddleware('admin'), deleteUser); // <-- Añadir
 
 export default router;

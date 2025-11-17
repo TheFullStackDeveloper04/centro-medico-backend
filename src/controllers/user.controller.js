@@ -1,31 +1,24 @@
-import User from '../models/User.js';
+// src/controllers/user.controller.js
+import User from '../models/User.js'; // <-- ESTA LÍNEA ES LA CLAVE
 
 /**
  * @desc    Crear un nuevo usuario (Admin, Medico, Recepcionista)
  * @route   POST /api/users
- * @access  Private (Admin) - (Lo protegeremos en el siguiente paso)
+ * @access  Private (Admin)
  */
 export const createUser = async (req, res) => {
     const { nombre, email, password, rol } = req.body;
-
     try {
-        // 1. Verificar si el email ya existe
         const userExists = await User.findOne({ email });
-
         if (userExists) {
             return res.status(400).json({ message: 'El usuario ya existe' });
         }
-
-        // 2. Crear el nuevo usuario
-        // (El hasheo de contraseña ocurre automáticamente gracias al middleware 'pre-save' en el Modelo)
         const user = await User.create({
             nombre,
             email,
             password,
             rol,
         });
-
-        // 3. Responder
         res.status(201).json({
             message: 'Usuario creado exitosamente',
             user: {
@@ -35,13 +28,10 @@ export const createUser = async (req, res) => {
                 rol: user.rol,
             },
         });
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error del servidor' });
     }
-
-
 };
 
 /**
@@ -51,7 +41,6 @@ export const createUser = async (req, res) => {
  */
 export const getUsers = async (req, res) => {
     try {
-        // Buscamos todos los usuarios, pero no enviamos la contraseña
         const users = await User.find({}).select('-password');
         res.status(200).json(users);
     } catch (error) {
@@ -67,11 +56,38 @@ export const getUsers = async (req, res) => {
  */
 export const getMedicos = async (req, res) => {
     try {
-        // Buscamos usuarios filtrando por el rol 'medico'
-        const medicos = await User.find({ rol: 'medico' }).select('-password -rol'); // No es necesario enviar el rol o pass
+        const medicos = await User.find({ rol: 'medico' }).select('-password -rol');
         res.status(200).json(medicos);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error del servidor' });
     }
+};
+
+
+
+/**
+ * @desc    Eliminar un usuario por ID
+ * @route   DELETE /api/users/:id
+ * @access  Private (Admin)
+ */
+export const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Evitar que el admin se elimine a sí mismo
+    if (req.user.id === id) {
+       return res.status(400).json({ message: 'No puede eliminar su propia cuenta de administrador' });
+    }
+
+    await User.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Usuario eliminado exitosamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
 };
