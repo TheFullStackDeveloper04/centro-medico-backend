@@ -1,5 +1,4 @@
 # Dependencias
-node_modules/
+
 
 # Archivo de secretos
-.env
